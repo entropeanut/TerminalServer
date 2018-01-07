@@ -1,0 +1,54 @@
+package terminal;
+
+/** Enumeration of color codes */
+public enum TerminalColor {
+
+	/** Resets color to standard light-on-dark */
+	RESET((char)27 + "[0m"),
+	
+	/** Brightens the current foreground color */
+	BRIGHT((char)27 + "[1m"),
+	
+	/** The default light-grey foreground color */
+	BLACK((char)27 + "[30m"),
+	
+	/** Red foreground color */
+	RED((char)27 + "[31m"),
+
+	/** Green foreground color */
+	GREEN((char)27 + "[32m"),
+
+	/** Yellow foreground color */
+	YELLOW((char)27 + "[33m"),
+
+	/** Blue foreground color */
+	BLUE((char)27 + "[34m"),
+
+	/** Purple foreground color */
+	PURPLE((char)27 + "[35m"),
+
+	/** Cyan foreground color */
+	CYAN((char)27 + "[36m"),
+
+	/** White foreground color */
+	WHITE((char)27 + "[37m");
+
+	/** The telnet code for this color */
+	private String code;
+	
+	/**
+	 * Private constructor
+	 * @param code The telnet code for this color
+	 */
+	private TerminalColor(String code) {
+		this.code = code;
+	}
+	
+	/**
+	 * @return The telnet code for this color
+	 */
+	@Override
+	public String toString() {
+		return code;
+	}
+}

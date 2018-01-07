@@ -1,0 +1,58 @@
+/**
+ * 
+ */
+package terminal;
+
+import java.io.EOFException;
+import java.io.IOException;
+
+/**
+ * Common interface implemented by all terminal types
+ */
+public interface Terminal {
+
+    /**
+     * Prints text on the client's screen with the given color
+     * @param color the color to use
+     * @param text the message to print
+     */
+    void print(TerminalColor color, String text);
+
+    /**
+     * Prints text on the client's screen
+     * @param text the message to print
+     */
+    void print(String text);
+
+    /**
+     * Prints a line of text on the client's screen with the default color
+     * @param text the message to print
+     */
+    public void println(String text);
+
+    /**
+     * Prints a line of text on the client's screen with the given color
+     * @param color the color to use
+     * @param text the message to print
+     */
+    public void println(TerminalColor color, String text);
+
+    /**
+     * Returns a line of input from the remote client
+     * @return the next line of client input
+     * @throws EOFException if the connection is closed 
+     * @throws IOException if an I/O error occurs
+     */
+    public String readLine() throws EOFException, IOException;
+
+    /**
+     * Closes the terminal
+     * @throws IOException if an I/O exception occurs
+     */
+    public void close() throws IOException;
+
+    /**
+     * @param prompt the prompt that is displayed when ready to accept input 
+     */
+    public void setPrompt(String prompt);
+}

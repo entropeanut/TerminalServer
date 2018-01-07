@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/3/TerminalServer/src/terminal
+END
+TerminalServer.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/3/TerminalServer/src/terminal/TerminalServer.java
+END
+TelnetTerminal.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/3/TerminalServer/src/terminal/TelnetTerminal.java
+END
+Terminal.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/3/TerminalServer/src/terminal/Terminal.java
+END
+TerminalClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/3/TerminalServer/src/terminal/TerminalClient.java
+END
+TerminalColor.java
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/3/TerminalServer/src/terminal/TerminalColor.java
+END

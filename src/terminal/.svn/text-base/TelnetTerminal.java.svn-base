@@ -1,0 +1,205 @@
+package terminal;
+
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+import java.util.logging.Logger;
+
+import javax.swing.SwingUtilities;
+
+
+/** A remote telnet terminal */
+public class TelnetTerminal implements Terminal {
+
+    /** the logger */
+    private static Logger log = Logger.getLogger(TelnetTerminal.class.getName());
+
+    /** the network connection */
+    private final SocketChannel socket;
+    
+    /** the input buffer */
+    private final ByteArrayOutputStream buffer;
+
+    /** the prompt that is displayed when ready to accept input */
+    private Object prompt;
+
+    /**
+	 * Constructor
+	 * @param socket the network connection
+	 */
+	TelnetTerminal(SocketChannel socket) {
+	    
+		this.socket = socket;
+		this.buffer = new ByteArrayOutputStream();
+		this.prompt = "";
+//        out.print((char)255); // IAC
+//        out.print((char)251); // WILL
+//        out.print((char)3); // SGA
+//        out.print((char)255); // IAC
+//        out.print((char)252); // WON'T
+//        out.print((char)1); // ECHO
+//        out.flush();
+	}
+
+    @Override
+	public void print(String text) {
+		try {
+            socket.write(ByteBuffer.wrap(text.getBytes()));
+        } catch (IOException e) {
+            // Ignore
+        }
+	}
+
+    @Override
+    public void print(TerminalColor color, String text) {
+        try {
+            String string = color.toString() + text.toString() + 
+                TerminalColor.RESET.toString();
+            socket.write(ByteBuffer.wrap(string.getBytes()));
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
+
+	@Override
+    public void println(String text)  {
+		try {
+            String string = text + (char)13 + (char)10;
+            socket.write(ByteBuffer.wrap(string.getBytes()));
+        } catch (IOException e) {
+            // Ignore
+        }
+	}
+
+    @Override
+    public void println(TerminalColor color, String text)  {
+        try {
+            String string = color.toString() + text.toString() + 
+                TerminalColor.RESET.toString() + (char)13 + (char)10;
+            socket.write(ByteBuffer.wrap(string.getBytes()));
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
+
+	@Override
+    public String readLine() throws EOFException, IOException {
+	    assert !SwingUtilities.isEventDispatchThread();
+
+        prompt();
+        buffer.reset();
+         
+        for (;;) {
+            int data = read();
+            if (data == 255) { // IAC
+                negotiate();
+            } else {
+                if (data == 8) { // Backspace
+                    byte[] byteArray = buffer.toByteArray();
+                    buffer.reset();
+                    buffer.write(byteArray, 0, byteArray.length-1);
+                } else if (data == 13) { // newline
+                    println("");
+                    return buffer.toString();
+                } else if (data != 10) {
+                    buffer.write(data);
+                }
+            }
+        }
+	}
+
+    /**
+     * Displays the prompt
+     * @throws IOException if an I/O error occurs
+     */
+    private void prompt() throws IOException {
+        String string = TerminalColor.YELLOW.toString() + prompt + ">" 
+            + TerminalColor.RESET.toString();
+        socket.write(ByteBuffer.wrap(string.getBytes()));
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "=["
+            + "socket=" + socket + "]";
+    }
+
+    @Override
+    public void close() throws IOException {
+        socket.close();
+    }
+    
+    /**
+     * Handles telnet negotiation following receipt of an IAC
+     * @throws EOFException if the connection is closed 
+     * @throws IOException if an I/O error occurs
+     */
+    private void negotiate() throws EOFException, IOException {
+        int data;
+        data = read();
+        if (data == 251) { // WILL
+            data = read();
+            if (data == 3) {// SGA
+                // Already negotiated
+            } else {
+                socket.write(ByteBuffer.wrap(new byte[]{
+                    (byte) 255, // IAC
+                    (byte) 254, // DON'T
+                    (byte) data // TTYPE
+                }));
+            }
+        } else if (data == 252) { // WON'T
+            // Just go along with whatever
+            data = read();
+            socket.write(ByteBuffer.wrap(new byte[]{
+                (byte) 255, // IAC
+                (byte) 254, // DON'T
+                (byte) data
+            }));
+        } else if (data == 253) { // DO
+            data = read();
+        } else if (data == 254) { // DON'T
+            data = read();
+        } else if (data == 250) { // Sub-negotiation
+            for (;;) {
+                // Read until end of negotiation
+                data = read();
+                if (data == 240) {
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * @return the next character of input from the client
+     * @throws EOFException if the connection is closed 
+     * @throws IOException if an I/O error occurs
+     */
+    private int read() throws EOFException, IOException {
+        ByteBuffer b = ByteBuffer.allocate(1);
+        int read = socket.read(b);
+        if (read == -1) {
+            throw new EOFException();
+        }
+        b.flip();
+        int data = 0x000000FF & b.get();
+        
+        log.finest("Received: " + data + " ('" + (char)data + "')" + " from "
+            + this);
+        return data;
+    }
+
+    @Override
+    public void setPrompt(String prompt) {
+        this.prompt = prompt;
+        try {
+            prompt();
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
+
+}
